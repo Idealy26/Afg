@@ -21,7 +21,7 @@ const siteUrl = 'https://agrofrancegasy.com'
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Agrofrancegasy — Produits agricoles d’exception de Madagascar',
+    default: 'Agrofrancegasy',
     template: '%s | Agrofrancegasy',
   },
   description:

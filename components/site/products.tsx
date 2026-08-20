@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, X } from 'lucide-react'
+import { ArrowUpRight, Calendar, Compass, Gem, Layers, X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { requestQuote } from '@/lib/quote'
 import { Reveal } from '@/components/motion/reveal'
@@ -11,12 +11,27 @@ import { SectionHeading } from '@/components/site/section-heading'
 import type { Product } from '@/lib/dictionaries'
 
 export function Products() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [active, setActive] = useState<Product | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string>('all')
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
+
+  const allLabel = lang === 'en' ? 'All' : 'Tous'
+
+  const categories = useMemo(() => {
+    const unique = Array.from(new Set(t.products.list.map((p) => p.category)))
+    return unique
+  }, [t.products.list])
+
+  const filteredProducts = useMemo(() => {
+    if (activeCategory === 'all') return t.products.list
+    return t.products.list.filter((p) => p.category === activeCategory)
+  }, [t.products.list, activeCategory])
 
   useEffect(() => {
     if (active) {
       document.body.style.overflow = 'hidden'
+      setSelectedVariant(active.variants && active.variants.length > 0 ? active.variants[0] : null)
     } else {
       document.body.style.overflow = ''
     }
@@ -42,8 +57,40 @@ export function Products() {
           subtitle={t.products.subtitle}
         />
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {t.products.list.map((product, i) => (
+        {categories.length > 1 ? (
+          <Reveal delay={1}>
+            <div className="mt-8 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveCategory('all')}
+                className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  activeCategory === 'all'
+                    ? 'border-[color:var(--gold)] bg-[color:var(--gold)] text-cocoa'
+                    : 'border-border text-muted-foreground hover:border-[color:var(--gold)]/50 hover:text-foreground'
+                }`}
+              >
+                {allLabel}
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setActiveCategory(category)}
+                  className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    activeCategory === category
+                      ? 'border-[color:var(--gold)] bg-[color:var(--gold)] text-cocoa'
+                      : 'border-border text-muted-foreground hover:border-[color:var(--gold)]/50 hover:text-foreground'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </Reveal>
+        ) : null}
+
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {filteredProducts.map((product, i) => (
             <Reveal key={product.id} delay={i % 4}>
               <button
                 type="button"
@@ -108,7 +155,7 @@ export function Products() {
                 <X className="size-4.5" />
               </button>
 
-              <div className="relative h-56 w-full md:h-auto">
+              <div className="relative h-64 w-full md:h-auto">
                 <Image
                   src={active.image || '/placeholder.svg'}
                   alt={active.name}
@@ -116,9 +163,15 @@ export function Products() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-cocoa/70 via-cocoa/0 to-cocoa/0" />
+                <div className="absolute bottom-5 left-5 right-5">
+                  <span className="inline-block rounded-full bg-cocoa/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--gold)] backdrop-blur">
+                    {active.category}
+                  </span>
+                </div>
               </div>
 
-              <div className="p-7 sm:p-9">
+              <div className="flex flex-col p-7 sm:p-9">
                 <p className="text-xs font-medium uppercase tracking-wider text-[color:var(--gold)]">
                   {active.tagline}
                 </p>
@@ -129,30 +182,60 @@ export function Products() {
                   {active.description}
                 </p>
 
-                <dl className="mt-6 space-y-4 border-t border-border pt-6">
+                {active.variants && active.variants.length > 0 ? (
+                  <div className="mt-6">
+                    <span className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <Layers className="size-3.5 text-[color:var(--gold)]" />
+                      {lang === 'en' ? 'Choose a type' : 'Choisissez un type'}
+                    </span>
+                    <div className="flex flex-wrap gap-2 rounded-xl border border-border bg-muted/30 p-2">
+                      {active.variants.map((variant) => (
+                        <button
+                          key={variant}
+                          type="button"
+                          onClick={() => setSelectedVariant(variant)}
+                          className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
+                            selectedVariant === variant
+                              ? 'bg-[color:var(--gold)] text-cocoa shadow-sm'
+                              : 'text-muted-foreground hover:bg-cream/60 hover:text-foreground'
+                          }`}
+                        >
+                          {variant}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="mt-6 divide-y divide-border overflow-hidden rounded-xl border border-border">
                   {[
-                    { label: t.products.labelOrigin, value: active.origin },
-                    { label: t.products.labelCharacteristics, value: active.characteristics },
-                    { label: t.products.labelUses, value: active.uses },
-                    { label: t.products.labelAvailability, value: active.availability },
+                    { icon: Compass, label: t.products.labelOrigin, value: active.origin },
+                    { icon: Gem, label: t.products.labelCharacteristics, value: active.characteristics },
+                    { icon: Layers, label: t.products.labelUses, value: active.uses },
+                    { icon: Calendar, label: t.products.labelAvailability, value: active.availability },
                   ].map((row) => (
-                    <div key={row.label} className="grid grid-cols-3 gap-3">
-                      <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        {row.label}
-                      </dt>
-                      <dd className="col-span-2 text-sm text-foreground/90">{row.value}</dd>
+                    <div key={row.label} className="flex gap-3 bg-muted/20 p-3.5">
+                      <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-[color:var(--gold)]/15 text-[color:var(--gold)]">
+                        <row.icon className="size-3.5" />
+                      </span>
+                      <div className="min-w-0">
+                        <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {row.label}
+                        </dt>
+                        <dd className="mt-0.5 text-sm leading-relaxed text-foreground/90">{row.value}</dd>
+                      </div>
                     </div>
                   ))}
-                </dl>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => {
-                    const name = active.name
+                    const name = selectedVariant ? `${active.name} — ${selectedVariant}` : active.name
                     setActive(null)
                     requestQuote(name)
                   }}
-                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3.5 text-sm font-semibold text-cocoa transition-colors hover:bg-[color:var(--gold)]/90"
                 >
                   {t.products.cta}
                   <ArrowUpRight className="size-4" />

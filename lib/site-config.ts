@@ -13,7 +13,7 @@ export const siteConfig = {
     facebook: 'https://www.facebook.com/profile.php?id=61574303546665',
     instagram: 'https://www.instagram.com',
   },
-  foundedYear: 2008,
+  foundedYear: 2025,
 } as const
 
 export type Lang = 'fr' | 'en'

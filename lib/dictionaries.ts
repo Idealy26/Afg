@@ -4,6 +4,8 @@ export type Product = {
   id: string
   name: string
   tagline: string
+  category: string
+  variants?: string[]
   description: string
   origin: string
   characteristics: string
@@ -204,6 +206,8 @@ const fr: Dictionary = {
         id: 'vanille',
         name: 'Vanille Bourbon',
         tagline: 'L’or noir de Madagascar',
+        category: 'Vanille',
+        variants: ['Gousses', 'Poudre', 'Extrait'],
         description:
           'Notre vanille Bourbon est reconnue pour son taux de vanilline élevé et son arôme profond, fruit d’une préparation traditionnelle et d’un affinage patient.',
         origin: 'Région SAVA, Madagascar',
@@ -216,6 +220,8 @@ const fr: Dictionary = {
         id: 'girofle',
         name: 'Girofle',
         tagline: 'Puissance aromatique',
+        category: 'Épices',
+        variants: ['Clous entiers', 'Griffes'],
         description:
           'Clous de girofle séchés au soleil, riches en huile essentielle, sélectionnés pour leur intensité et leur régularité.',
         origin: 'Côte Est, Madagascar',
@@ -228,6 +234,8 @@ const fr: Dictionary = {
         id: 'cacao',
         name: 'Cacao',
         tagline: 'Fèves fines et fruitées',
+        category: 'Cacao & Café',
+        variants: ['Fèves fermentées', 'Fèves séchées'],
         description:
           'Un cacao fin recherché pour ses notes fruitées et acidulées, issu de plantations sélectionnées de la région de l’Ambanja.',
         origin: 'Vallée du Sambirano, Madagascar',
@@ -240,6 +248,8 @@ const fr: Dictionary = {
         id: 'poivre',
         name: 'Poivre',
         tagline: 'Caractère et profondeur',
+        category: 'Épices',
+        variants: ['Noir', 'Blanc', 'Sauvage'],
         description:
           'Poivre noir sélectionné pour sa puissance aromatique et sa fraîcheur, cultivé dans le respect des méthodes traditionnelles.',
         origin: 'Côte Est, Madagascar',
@@ -252,6 +262,8 @@ const fr: Dictionary = {
         id: 'cafe',
         name: 'Café',
         tagline: 'Arômes d’altitude',
+        category: 'Cacao & Café',
+        variants: ['Arabica', 'Robusta'],
         description:
           'Un café cultivé en altitude, aux arômes équilibrés et à la belle acidité, disponible en vert pour la torréfaction.',
         origin: 'Hautes terres, Madagascar',
@@ -264,6 +276,8 @@ const fr: Dictionary = {
         id: 'miel',
         name: 'Miel naturel',
         tagline: 'Pureté du terroir',
+        category: 'Miel',
+        variants: ['Pots', 'Fûts'],
         description:
           'Un miel naturel récolté dans des zones préservées, non traité, aux arômes floraux caractéristiques de la flore malgache.',
         origin: 'Forêts & hauts plateaux, Madagascar',
@@ -276,6 +290,8 @@ const fr: Dictionary = {
         id: 'epices',
         name: 'Épices',
         tagline: 'La palette de Madagascar',
+        category: 'Épices',
+        variants: ['Cannelle', 'Curcuma', 'Gingembre'],
         description:
           'Une gamme d’épices soigneusement sélectionnées : cannelle, curcuma, gingembre et autres trésors du terroir malgache.',
         origin: 'Diverses régions, Madagascar',
@@ -288,6 +304,7 @@ const fr: Dictionary = {
         id: 'agroalimentaire',
         name: 'Produits agroalimentaires',
         tagline: 'Le meilleur du local',
+        category: 'Agroalimentaire',
         description:
           'Une sélection de produits agroalimentaires locaux, transformés et conditionnés selon les standards de l’export international.',
         origin: 'Madagascar',
@@ -442,7 +459,7 @@ const fr: Dictionary = {
     contactTitle: 'Contact',
     catalogue: 'Télécharger le catalogue',
     rights: 'Tous droits réservés.',
-    madeIn: 'Fièrement cultivé à Madagascar',
+    madeIn: '',
   },
   floating: {
     whatsapp: 'Écrire sur WhatsApp',
@@ -528,6 +545,8 @@ const en: Dictionary = {
         id: 'vanille',
         name: 'Bourbon Vanilla',
         tagline: 'Madagascar’s black gold',
+        category: 'Vanilla',
+        variants: ['Pods', 'Powder', 'Extract'],
         description:
           'Our Bourbon vanilla is renowned for its high vanillin content and deep aroma, the result of traditional preparation and patient curing.',
         origin: 'SAVA region, Madagascar',
@@ -540,6 +559,8 @@ const en: Dictionary = {
         id: 'girofle',
         name: 'Clove',
         tagline: 'Aromatic intensity',
+        category: 'Spices',
+        variants: ['Whole cloves', 'Stems'],
         description:
           'Sun-dried cloves, rich in essential oil, selected for their intensity and consistency.',
         origin: 'East Coast, Madagascar',
@@ -552,6 +573,8 @@ const en: Dictionary = {
         id: 'cacao',
         name: 'Cocoa',
         tagline: 'Fine, fruity beans',
+        category: 'Cocoa & Coffee',
+        variants: ['Fermented beans', 'Dried beans'],
         description:
           'A fine cocoa sought after for its fruity, tangy notes, from selected plantations of the Ambanja region.',
         origin: 'Sambirano Valley, Madagascar',
@@ -564,6 +587,8 @@ const en: Dictionary = {
         id: 'poivre',
         name: 'Pepper',
         tagline: 'Character and depth',
+        category: 'Spices',
+        variants: ['Black', 'White', 'Wild'],
         description:
           'Black pepper selected for its aromatic power and freshness, grown following traditional methods.',
         origin: 'East Coast, Madagascar',
@@ -576,6 +601,8 @@ const en: Dictionary = {
         id: 'cafe',
         name: 'Coffee',
         tagline: 'High-altitude aromas',
+        category: 'Cocoa & Coffee',
+        variants: ['Arabica', 'Robusta'],
         description:
           'A high-altitude coffee with balanced aromas and lively acidity, available green for roasting.',
         origin: 'Highlands, Madagascar',
@@ -588,6 +615,8 @@ const en: Dictionary = {
         id: 'miel',
         name: 'Natural Honey',
         tagline: 'Purity of the terroir',
+        category: 'Honey',
+        variants: ['Jars', 'Drums'],
         description:
           'A natural honey harvested in preserved areas, untreated, with floral aromas characteristic of Malagasy flora.',
         origin: 'Forests & highlands, Madagascar',
@@ -600,6 +629,8 @@ const en: Dictionary = {
         id: 'epices',
         name: 'Spices',
         tagline: 'Madagascar’s palette',
+        category: 'Spices',
+        variants: ['Cinnamon', 'Turmeric', 'Ginger'],
         description:
           'A range of carefully selected spices: cinnamon, turmeric, ginger and other treasures of the Malagasy terroir.',
         origin: 'Various regions, Madagascar',
@@ -612,6 +643,7 @@ const en: Dictionary = {
         id: 'agroalimentaire',
         name: 'Agri-food Products',
         tagline: 'The best of local',
+        category: 'Agri-food',
         description:
           'A selection of local agri-food products, processed and packaged to international export standards.',
         origin: 'Madagascar',

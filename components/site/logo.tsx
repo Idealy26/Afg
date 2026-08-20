@@ -13,10 +13,10 @@ export function Logo({ className }: { className?: string }) {
         priority
       />
       <span className="flex flex-col leading-none">
-        <span className="font-serif text-lg font-semibold tracking-tight text-white">
+        <span className="font-serif text-lg font-semibold tracking-tight text-current">
           Agrofrancegasy
         </span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/70">
+        <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-current/70">
           Madagascar Exports
         </span>
       </span>
