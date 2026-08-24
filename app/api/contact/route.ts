@@ -2,6 +2,75 @@ import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { siteConfig } from '@/lib/site-config'
 
+/* ------------------------------------------------------------------ *
+ * Design de l'email : un « accusé de réception » de registre commercial,
+ * pas une carte SaaS. Agrofrancegasy exporte des épices et de la vanille —
+ * le monde visuel emprunté est celui du document d'export : encre de
+ * tampon, papier de registre, en-tête de manifeste, colonnes de valeurs.
+ * Aucune image externe (bloquées par défaut dans la plupart des clients
+ * mail) : tout le rendu est typographique et structurel.
+ * ------------------------------------------------------------------ */
+
+const INK = '#1c1a14' // encre
+const INK_MUTED = '#6d6353' // encre délavée (libellés, méta)
+const RULE = '#d9d2c0' // filet papier
+const LEDGER_STRIPE = '#eef2ec' // vert de registre comptable, très pâle
+const GREEN = '#1f4a37' // vert plantation — accent de lien
+const STAMP = '#9c3b2a' // rouge tampon encreur
+
+const SERIF = "'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif"
+const MONO = "'Courier New', Courier, monospace"
+const SANS = 'Arial, Helvetica, sans-serif'
+
+/** Échappe tout ce qui vient du formulaire avant injection dans le HTML. */
+function esc(value?: string) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/** Référence lisible dérivée de l'horodatage — affichage uniquement, non persistée. */
+function buildReference(date: Date) {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Indian/Antananarivo',
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00'
+  return `${get('year')}-${get('month')}${get('day')}-${get('hour')}${get('minute')}`
+}
+
+function buildHeadline(product?: string, volume?: string) {
+  if (product && volume) return `${esc(product)} — ${esc(volume)}`
+  if (product) return esc(product)
+  if (volume) return `Volume estimé : ${esc(volume)}`
+  return 'Demande de renseignements'
+}
+
+function buildSubline(name?: string, company?: string, country?: string) {
+  return [name, company, country].filter(Boolean).map((v) => esc(v)).join(' · ')
+}
+
+/** Conserve les paragraphes du message ; pre-wrap n'est pas fiable sous Outlook. */
+function formatMessage(message: string) {
+  return esc(message)
+    .split(/\n{2,}/)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 14px 0; font-family:${SANS}; font-size:15px; line-height:1.65; color:${INK};">${block.replace(
+          /\n/g,
+          '<br />',
+        )}</p>`,
+    )
+    .join('')
+}
+
 function buildHtmlEmail({
   name,
   company,
@@ -11,103 +80,163 @@ function buildHtmlEmail({
   volume,
   message,
 }: Record<string, string | undefined>) {
-  const rows = [
-    { label: 'Nom complet', value: name },
-    { label: 'Entreprise', value: company || '—' },
-    { label: 'Email', value: email },
-    { label: 'Pays', value: country || '—' },
-    { label: "Produit d'intérêt", value: product || '—' },
-    { label: 'Volume estimé', value: volume || '—' },
-  ]
+  const now = new Date()
+  const reference = buildReference(now)
+  const receivedAt = new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+    timeZone: 'Indian/Antananarivo',
+  }).format(now)
+  const stampDate = new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'Indian/Antananarivo',
+  }).format(now)
 
-  const rowsHtml = rows
+  const headline = buildHeadline(product, volume)
+  const subline = buildSubline(name, company, country)
+
+  // Seuls les champs renseignés apparaissent dans le registre.
+  const fields = [
+    { label: 'Email', value: email },
+    { label: 'Entreprise', value: company },
+    { label: 'Pays', value: country },
+    { label: 'Produit', value: product },
+    { label: 'Volume', value: volume },
+  ].filter((f): f is { label: string; value: string } => Boolean(f.value))
+
+  const fieldsHtml = fields
     .map(
-      (row, i) => `
+      (f, i) => `
         <tr>
-          <td style="padding:14px 20px; background:${i % 2 === 0 ? '#faf6ef' : '#ffffff'}; border-bottom:1px solid #ece3d3; font-family:Arial,Helvetica,sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#8a7a5a; width:38%; vertical-align:top;">
-            ${row.label}
+          <td width="112" style="padding:9px 12px; background:${
+            i % 2 === 0 ? '#ffffff' : LEDGER_STRIPE
+          }; font-family:${MONO}; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:${INK_MUTED}; vertical-align:top; white-space:nowrap;">
+            ${esc(f.label)}
           </td>
-          <td style="padding:14px 20px; background:${i % 2 === 0 ? '#faf6ef' : '#ffffff'}; border-bottom:1px solid #ece3d3; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#2e2013; vertical-align:top;">
-            ${row.value}
+          <td style="padding:9px 12px; background:${
+            i % 2 === 0 ? '#ffffff' : LEDGER_STRIPE
+          }; font-family:${SANS}; font-size:14px; line-height:1.5; color:${INK}; vertical-align:top;">
+            ${esc(f.value)}
           </td>
         </tr>`,
     )
     .join('')
 
-  return `
-  <!DOCTYPE html>
-  <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nouvelle demande de devis</title>
-  </head>
-  <body style="margin:0; padding:0; background-color:#ede4d3; font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ede4d3; padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(46,32,19,0.12);">
+  const messageHtml = message
+    ? formatMessage(message)
+    : `<p style="margin:0; font-family:${SANS}; font-size:15px; line-height:1.65; color:${INK_MUTED};">Aucun message joint — seules les coordonnées ci-dessous ont été renseignées.</p>`
 
-            <!-- Header -->
-            <tr>
-              <td style="background:#2e2013; padding:32px 28px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td align="left">
-                      <span style="display:inline-block; height:2px; width:28px; background:#caa460; vertical-align:middle; margin-right:10px;"></span>
-                      <span style="font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#caa460; vertical-align:middle;">
-                        ${siteConfig.name}
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding-top:14px;">
-                      <span style="font-family:Georgia,'Times New Roman',serif; font-size:24px; font-weight:600; color:#f5ecd9;">
-                        Nouvelle demande de devis
-                      </span>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+  const firstName = (name || '').trim().split(/\s+/)[0] || 'vous'
 
-            <!-- Details table -->
-            <tr>
-              <td style="padding:0;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                  ${rowsHtml}
-                </table>
-              </td>
-            </tr>
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
+  <title>${headline}</title>
+</head>
+<body style="margin:0; padding:0; background:#ffffff;">
 
-            <!-- Message -->
-            <tr>
-              <td style="padding:24px 28px 8px 28px;">
-                <p style="margin:0 0 8px 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#8a7a5a;">
-                  Message
-                </p>
-                <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.6; color:#2e2013; white-space:pre-wrap;">
-                  ${message ? message.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '(aucun message)'}
-                </p>
-              </td>
-            </tr>
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0;">${headline} — ${subline}</div>
 
-            <!-- CTA reply -->
-            <tr>
-              <td style="padding:24px 28px 32px 28px; border-bottom-left-radius:16px; border-bottom-right-radius:16px;">
-                <a href="mailto:${email}" style="display:inline-block; background:#caa460; color:#2e2013; font-family:Arial,Helvetica,sans-serif; font-size:14px; font-weight:700; text-decoration:none; padding:12px 24px; border-radius:999px;">
-                  Répondre à ${name}
-                </a>
-              </td>
-            </tr>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+    <tr>
+      <td align="center" style="padding:30px 20px 40px 20px;">
+        <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px; width:100%;">
 
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-  </html>
-  `
+          <!-- Manifeste : marque + référence -->
+          <tr>
+            <td style="padding-bottom:12px; border-bottom:1px solid ${INK}; font-family:${MONO}; font-size:12px; letter-spacing:0.08em; color:${INK};">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="left" style="font-family:${MONO}; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:${INK};">
+                    ${esc(siteConfig.name)}
+                  </td>
+                  <td align="right" style="font-family:${MONO}; font-size:12px; letter-spacing:0.04em; color:${INK_MUTED};">
+                    N° ${reference}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Objet de la demande + tampon de réception -->
+          <tr>
+            <td style="padding:26px 0 4px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align:top;">
+                    <p style="margin:0 0 6px 0; font-family:${SERIF}; font-size:23px; line-height:1.3; font-weight:bold; color:${INK};">
+                      ${headline}
+                    </p>
+                    <p style="margin:0; font-family:${SANS}; font-size:14px; line-height:1.5; color:${INK_MUTED};">
+                      ${subline}
+                    </p>
+                  </td>
+                  <td width="92" style="vertical-align:top; text-align:right;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-left:auto; transform:rotate(-7deg); -ms-transform:rotate(-7deg);">
+                      <tr>
+                        <td style="border:2px solid rgba(156,59,42,0.55); padding:3px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="border:1px solid rgba(156,59,42,0.55); padding:7px 10px; text-align:center;">
+                                <div style="font-family:${MONO}; font-size:10px; font-weight:bold; letter-spacing:0.08em; color:${STAMP}; line-height:1.4;">REÇU</div>
+                                <div style="font-family:${MONO}; font-size:10px; letter-spacing:0.04em; color:${STAMP}; line-height:1.4; text-transform:uppercase;">${stampDate}</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Message -->
+          <tr>
+            <td style="padding:20px 0 4px 0;">
+              ${messageHtml}
+            </td>
+          </tr>
+
+          <!-- Registre des coordonnées -->
+          <tr>
+            <td style="padding:18px 0 0 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${RULE};">
+                ${fieldsHtml}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Action -->
+          <tr>
+            <td style="padding:22px 0 0 0;">
+              <a href="mailto:${esc(email)}?subject=${encodeURIComponent(
+                `Re: ${headline} — réf. ${reference}`,
+              )}" style="font-family:${SANS}; font-size:15px; font-weight:bold; color:${GREEN}; text-decoration:underline;">
+                Répondre à ${esc(firstName)}
+              </a>
+            </td>
+          </tr>
+
+          <!-- Provenance -->
+          <tr>
+            <td style="padding:26px 0 0 0; font-family:${MONO}; font-size:11px; letter-spacing:0.02em; color:${INK_MUTED};">
+              Formulaire de contact du site · reçu le ${receivedAt}
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
 }
 
 export async function POST(request: Request) {
@@ -168,18 +297,28 @@ export async function POST(request: Request) {
       )
     }
 
-    const subject = `Demande de devis — ${company || name}`
+    const now = new Date()
+    const reference = buildReference(now)
+
+    const subject = `Devis — ${[product, volume].filter(Boolean).join(', ') || 'demande'} (${
+      company || name
+    }) · réf. ${reference}`
 
     const text = [
-      `Nom complet: ${name}`,
-      `Entreprise: ${company || '-'}`,
-      `Email: ${email}`,
-      `Pays: ${country || '-'}`,
-      `Produit d'intérêt: ${product || '-'}`,
-      `Volume estimé: ${volume || '-'}`,
+      [product, volume].filter(Boolean).join(' — ') || 'Demande de renseignements',
+      [name, company, country].filter(Boolean).join(' · '),
       '',
-      message || '(aucun message)',
-    ].join('\n')
+      message || 'Aucun message joint.',
+      '',
+      `Réf. ${reference}`,
+      `Email : ${email}`,
+      company ? `Entreprise : ${company}` : null,
+      country ? `Pays : ${country}` : null,
+      product ? `Produit : ${product}` : null,
+      volume ? `Volume : ${volume}` : null,
+    ]
+      .filter((line) => line !== null)
+      .join('\n')
 
     const html = buildHtmlEmail({ name, company, email, country, product, volume, message })
 
