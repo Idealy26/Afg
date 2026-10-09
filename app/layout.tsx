@@ -20,57 +20,51 @@ const siteUrl = 'https://agrofrancegasy.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+
   title: {
-    default: 'Agrofrancegasy',
+    default: 'Agrofrancegasy | Vanille Bourbon et épices de Madagascar',
     template: '%s | Agrofrancegasy',
   },
+
   description:
-    'Agrofrancegasy produit, sélectionne et exporte des produits agricoles d’exception de Madagascar : vanille Bourbon, girofle, cacao, poivre, café, miel et épices. Qualité premium, traçabilité et commerce responsable pour les importateurs internationaux.',
-  keywords: [
-    'Madagascar',
-    'vanille Bourbon',
-    'export agricole',
-    'girofle',
-    'cacao',
-    'poivre',
-    'café',
-    'miel',
-    'épices',
-    'importateur',
-    'grossiste',
-    'commerce responsable',
-  ],
+    'Agrofrancegasy produit et exporte de la vanille Bourbon, girofle, cacao, poivre, café, miel et épices de Madagascar. Qualité premium et traçabilité pour importateurs.',
+
   authors: [{ name: 'Agrofrancegasy' }],
-  generator: 'v0.app',
+
   alternates: {
     canonical: '/',
-    languages: { 'fr-FR': '/', 'en-US': '/' },
   },
+
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
     url: siteUrl,
     siteName: 'Agrofrancegasy',
-    title: 'Agrofrancegasy — Produits agricoles d’exception de Madagascar',
+    title: 'Agrofrancegasy | Produits agricoles d’exception de Madagascar',
     description:
       'Producteur et exportateur international de vanille Bourbon, épices, cacao, café et miel de Madagascar. Qualité premium et traçabilité.',
     images: [
       {
-        url: '/images/hero-plantation.png',
+        url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Plantation de vanille à Madagascar',
+        alt: 'Plantation de vanille à Madagascar - Agrofrancegasy',
       },
     ],
   },
+
   twitter: {
     card: 'summary_large_image',
-    title: 'Agrofrancegasy — Produits agricoles d’exception de Madagascar',
+    title: 'Agrofrancegasy | Produits agricoles d’exception de Madagascar',
     description:
       'Producteur et exportateur international de vanille Bourbon, épices, cacao, café et miel de Madagascar.',
-    images: ['/images/hero-plantation.png'],
+    images: ['/images/og-image.jpg'],
   },
-  robots: { index: true, follow: true },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export const viewport: Viewport = {
@@ -85,7 +79,7 @@ const jsonLd = {
   '@type': 'Organization',
   name: 'Agrofrancegasy',
   url: siteUrl,
-  logo: `${siteUrl}/images/hero-plantation.png`,
+  logo: `${siteUrl}/logo.png`, // remplace par ton vrai logo
   description:
     'Production, sélection et exportation de produits agricoles d’exception de Madagascar.',
   address: {
@@ -94,11 +88,7 @@ const jsonLd = {
     addressLocality: 'Antananarivo',
   },
   areaServed: 'Worldwide',
-  sameAs: [
-    'https://www.linkedin.com',
-    'https://www.facebook.com',
-    'https://www.instagram.com',
-  ],
+  // sameAs: ['https://www.linkedin.com/company/TON-PROFIL'],
 }
 
 export default function RootLayout({
@@ -107,13 +97,20 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`light ${inter.variable} ${fraunces.variable} bg-background`}>
+    <html
+      lang="fr"
+      className={`light ${inter.variable} ${fraunces.variable} bg-background`}
+    >
       <body className="antialiased">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+          }}
         />
+
         {children}
+
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
