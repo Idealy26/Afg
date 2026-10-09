@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import { I18nProvider } from '@/lib/i18n'
 import { CatalogueView } from '@/components/site/catalogue-view'
 
-export const metadata: Metadata = {
-  title: 'Catalogue',
+export const metadata = {
+  title: 'Catalogue : produits locaux de Madagascar',
   description:
-    'Catalogue des produits agricoles d’exception de Madagascar par Agrofrancegasy : vanille Bourbon, girofle, cacao, poivre, café, miel et épices.',
+    'Catalogue de produits locaux de Madagascar : vanille Bourbon, girofle, cacao, poivre, café, miel et épices en gros pour importateurs.',
+  alternates: { canonical: '/catalogue' },
 }
 
 export default function CataloguePage() {

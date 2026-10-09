@@ -22,14 +22,18 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
   title: {
-    default: 'Agrofrancegasy | Vanille Bourbon et épices de Madagascar',
+    default: 'Produits locaux de Madagascar | Vanille, épices, cacao',
     template: '%s | Agrofrancegasy',
   },
 
   description:
-    'Agrofrancegasy produit et exporte de la vanille Bourbon, girofle, cacao, poivre, café, miel et épices de Madagascar. Qualité premium et traçabilité pour importateurs.',
+    'Agrofrancegasy exporte les meilleurs produits locaux de Madagascar : vanille Bourbon, girofle, cacao, poivre, café, miel et épices. Qualité premium et traçabilité.',
 
-  authors: [{ name: 'Agrofrancegasy' }],
+  applicationName: 'Agrofrancegasy',
+  authors: [{ name: 'Agrofrancegasy', url: siteUrl }],
+  creator: 'Agrofrancegasy',
+  publisher: 'Agrofrancegasy',
+  category: 'agriculture',
 
   alternates: {
     canonical: '/',
@@ -40,31 +44,40 @@ export const metadata: Metadata = {
     locale: 'fr_FR',
     url: siteUrl,
     siteName: 'Agrofrancegasy',
-    title: 'Agrofrancegasy | Produits agricoles d’exception de Madagascar',
+    title: 'Produits locaux de Madagascar | Agrofrancegasy',
     description:
-      'Producteur et exportateur international de vanille Bourbon, épices, cacao, café et miel de Madagascar. Qualité premium et traçabilité.',
+      'Vanille Bourbon, girofle, cacao, poivre, café, miel et épices : les produits locaux de Madagascar, exportés avec qualité premium et traçabilité.',
     images: [
       {
-        url: '/images/og-image.jpg',
+        url: '/images/og-image.jpg', // à créer : 1200x630 px
         width: 1200,
         height: 630,
-        alt: 'Plantation de vanille à Madagascar - Agrofrancegasy',
+        alt: 'Produits locaux de Madagascar : vanille, épices et cacao - Agrofrancegasy',
       },
     ],
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: 'Agrofrancegasy | Produits agricoles d’exception de Madagascar',
+    title: 'Produits locaux de Madagascar | Agrofrancegasy',
     description:
-      'Producteur et exportateur international de vanille Bourbon, épices, cacao, café et miel de Madagascar.',
+      'Vanille Bourbon, girofle, cacao, poivre, café, miel et épices de Madagascar.',
     images: ['/images/og-image.jpg'],
   },
 
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
+
+  // Décommente et colle le code fourni par Google Search Console (méthode "balise HTML")
+  // verification: { google: 'TON_CODE_ICI' },
 }
 
 export const viewport: Viewport = {
@@ -74,22 +87,44 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Agrofrancegasy',
-  url: siteUrl,
-  logo: `${siteUrl}/logo.png`, // remplace par ton vrai logo
-  description:
-    'Production, sélection et exportation de produits agricoles d’exception de Madagascar.',
-  address: {
-    '@type': 'PostalAddress',
-    addressCountry: 'MG',
-    addressLocality: 'Antananarivo',
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${siteUrl}/#organization`,
+    name: 'Agrofrancegasy',
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`, // ton vrai logo, minimum 112x112 px
+    description:
+      'Production, sélection et exportation de produits locaux de Madagascar : vanille Bourbon, épices, cacao, café et miel.',
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'MG',
+      addressLocality: 'Antananarivo',
+    },
+    areaServed: 'Worldwide',
+    knowsAbout: [
+      'Vanille Bourbon de Madagascar',
+      'Épices de Madagascar',
+      'Cacao de Madagascar',
+      'Girofle',
+      'Poivre',
+      'Café',
+      'Miel',
+    ],
+    // Ajoute tes vrais profils :
+    // sameAs: ['https://www.facebook.com/TA-PAGE', 'https://www.linkedin.com/company/TON-PROFIL'],
   },
-  areaServed: 'Worldwide',
-  // sameAs: ['https://www.linkedin.com/company/TON-PROFIL'],
-}
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${siteUrl}/#website`,
+    url: siteUrl,
+    name: 'Agrofrancegasy',
+    inLanguage: 'fr',
+    publisher: { '@id': `${siteUrl}/#organization` },
+  },
+]
 
 export default function RootLayout({
   children,
